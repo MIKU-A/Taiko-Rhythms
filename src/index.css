@@ -2,39 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Taiko-inspired design system with traditional Japanese colors */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 240 10% 8%;
+    --foreground: 0 0% 95%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 240 8% 12%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 240 8% 12%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Taiko drum colors */
+    --primary: 0 84% 55%;           /* Taiko red */
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 220 91% 65%;       /* Blue (ka) */
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 240 6% 20%;
+    --muted-foreground: 240 5% 65%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 45 93% 58%;           /* Gold accent */
+    --accent-foreground: 240 10% 8%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 240 6% 20%;
+    --input: 240 6% 16%;
+    --ring: 0 84% 55%;
+
+    /* Taiko-specific design tokens */
+    --drum-don: 0 84% 55%;          /* Red drum (don) */
+    --drum-ka: 220 91% 65%;         /* Blue drum (ka) */
+    --drum-rim: 240 6% 15%;         /* Drum rim */
+    --track-bg: 240 8% 10%;         /* Game track background */
+    --note-glow: 45 93% 58%;        /* Note hit effect */
+    
+    /* Gradients */
+    --gradient-drum: linear-gradient(135deg, hsl(var(--drum-don)), hsl(0 84% 45%));
+    --gradient-track: linear-gradient(180deg, hsl(var(--track-bg)), hsl(240 8% 6%));
+    --gradient-glow: radial-gradient(circle, hsl(var(--note-glow) / 0.3), transparent);
+    
+    /* Shadows and effects */
+    --shadow-drum: 0 8px 32px hsl(var(--drum-don) / 0.3);
+    --shadow-glow: 0 0 20px hsl(var(--note-glow) / 0.5);
 
     --radius: 0.5rem;
 
