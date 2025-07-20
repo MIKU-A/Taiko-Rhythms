@@ -5,6 +5,8 @@ import { TaikoDrum } from "./TaikoDrum";
 import { GameTrack } from "./GameTrack";
 import { ScoreDisplay } from "./ScoreDisplay";
 import { PythonEditor } from "./PythonEditor";
+import { BeatEditor } from "./BeatEditor";
+import { DrumDetector } from "./DrumDetector";
 import { useToast } from "@/hooks/use-toast";
 
 export type NoteType = "don" | "ka" | "big-don" | "big-ka";
@@ -36,6 +38,9 @@ export const TaikoGame = () => {
   });
   
   const [showPython, setShowPython] = useState(false);
+  const [showBeatEditor, setShowBeatEditor] = useState(false);
+  const [useRealDrums, setUseRealDrums] = useState(false);
+  const [customPattern, setCustomPattern] = useState<Omit<Note, "id" | "position" | "hit">[]>([]);
   const gameLoopRef = useRef<number>();
   const startTimeRef = useRef<number>();
 
@@ -52,7 +57,8 @@ export const TaikoGame = () => {
   ];
 
   const generateNotes = useCallback(() => {
-    const notes = samplePattern.map((pattern, index) => ({
+    const pattern = customPattern.length > 0 ? customPattern : samplePattern;
+    const notes = pattern.map((pattern, index) => ({
       id: `note-${index}`,
       type: pattern.type,
       timing: pattern.timing,
@@ -60,7 +66,15 @@ export const TaikoGame = () => {
       hit: false
     }));
     setGameState(prev => ({ ...prev, notes }));
-  }, []);
+  }, [customPattern]);
+
+  const handlePatternSave = (pattern: Omit<Note, "id" | "position" | "hit">[]) => {
+    setCustomPattern(pattern);
+    toast({
+      title: "Custom Pattern Loaded!",
+      description: `Loaded ${pattern.length} notes. Start a new game to use it.`,
+    });
+  };
 
   const startGame = () => {
     setGameState(prev => ({ 
@@ -156,7 +170,19 @@ export const TaikoGame = () => {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Taiko Rhythm
           </h1>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button 
+              onClick={() => setShowBeatEditor(!showBeatEditor)}
+              variant="outline"
+            >
+              {showBeatEditor ? "Hide" : "Show"} Beat Editor
+            </Button>
+            <Button 
+              onClick={() => setUseRealDrums(!useRealDrums)}
+              variant={useRealDrums ? "default" : "outline"}
+            >
+              {useRealDrums ? "Real Drums ON" : "Real Drums OFF"}
+            </Button>
             <Button 
               onClick={() => setShowPython(!showPython)}
               variant="outline"
@@ -175,9 +201,24 @@ export const TaikoGame = () => {
         {/* Score Display */}
         <ScoreDisplay gameState={gameState} />
 
+        {/* Real Drum Detection */}
+        {useRealDrums && (
+          <DrumDetector 
+            onDrumHit={onDrumHit} 
+            isActive={gameState.isPlaying || showBeatEditor} 
+          />
+        )}
+
         {/* Game Area */}
         <Card className="p-6 bg-card/50 backdrop-blur-sm">
           <div className="space-y-6">
+            {/* Pattern Info */}
+            {customPattern.length > 0 && (
+              <div className="text-center text-sm text-muted-foreground bg-accent/10 p-2 rounded">
+                Using custom pattern with {customPattern.length} notes
+              </div>
+            )}
+            
             {/* Game Track */}
             <GameTrack notes={gameState.notes} isPlaying={gameState.isPlaying} />
             
@@ -185,6 +226,11 @@ export const TaikoGame = () => {
             <TaikoDrum onHit={onDrumHit} isPlaying={gameState.isPlaying} />
           </div>
         </Card>
+
+        {/* Beat Editor */}
+        {showBeatEditor && (
+          <BeatEditor onPatternSave={handlePatternSave} />
+        )}
 
         {/* Python Editor */}
         {showPython && (
