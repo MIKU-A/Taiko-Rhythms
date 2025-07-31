@@ -1,0 +1,22 @@
+{"main": "electron/electron.js",
+"scripts": {
+  "dev": "vite",
+  "build": "vite build",
+  "start": "electron .",
+  "pack": "electron-builder --dir",
+  "dist": "electron-builder"
+},
+"devDependencies": {
+  "electron": "^30.0.0",
+  "electron-builder": "^24.13.3"
+},
+"build": {
+  "appId": "com.taiko.rhythms",
+  "productName": "Taiko Rhythms",
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "package.json"
+  ]
+}
+}
