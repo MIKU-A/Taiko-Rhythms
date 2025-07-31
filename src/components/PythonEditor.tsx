@@ -3,64 +3,113 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Play, Code } from "lucide-react";
+import { Play, Code, Download } from "lucide-react";
+import { Note } from "./TaikoGame";
 
-export const PythonEditor = () => {
+interface PythonEditorProps {
+  onPatternGenerate?: (pattern: Omit<Note, "id" | "position" | "hit">[]) => void;
+}
+
+export const PythonEditor = ({ onPatternGenerate }: PythonEditorProps) => {
   const { toast } = useToast();
   const [code, setCode] = useState(`# Python-style rhythm pattern generator
-def generate_pattern(bpm=120):
+def generate_pattern(bpm=120, pattern_type="basic"):
     """Generate a taiko rhythm pattern"""
     beat_duration = 60000 / bpm  # milliseconds per beat
     
     pattern = []
-    for i in range(8):
-        timing = i * beat_duration
-        if i % 2 == 0:
-            pattern.append({"timing": timing, "type": "don"})
-        else:
-            pattern.append({"timing": timing, "type": "ka"})
+    
+    if pattern_type == "basic":
+        # Simple alternating don/ka pattern
+        for i in range(8):
+            timing = i * beat_duration
+            note_type = "don" if i % 2 == 0 else "ka"
+            pattern.append({"timing": timing, "type": note_type})
+    
+    elif pattern_type == "complex":
+        # More complex pattern with big drums
+        beats = [
+            (0, "don"), (0.5, "don"), (1, "ka"), 
+            (2, "big-don"), (2.5, "ka"), (3, "don"),
+            (3.5, "ka"), (4, "big-ka"), (5, "don"),
+            (5.5, "don"), (6, "ka"), (7, "don")
+        ]
+        for beat_pos, note_type in beats:
+            timing = beat_pos * beat_duration
+            pattern.append({"timing": timing, "type": note_type})
+    
+    elif pattern_type == "rapid":
+        # Rapid-fire pattern
+        for i in range(16):
+            timing = i * (beat_duration / 2)
+            note_type = "don" if i % 4 < 2 else "ka"
+            pattern.append({"timing": timing, "type": note_type})
     
     return pattern
 
-# Generate a simple 8-beat pattern
-rhythm = generate_pattern(120)
-print("Generated rhythm pattern:")
-for beat in rhythm:
-    print(f"  {beat['timing']}ms: {beat['type']}")
-`);
+# Generate pattern - change parameters here!
+rhythm = generate_pattern(bpm=140, pattern_type="complex")`);
 
   const [output, setOutput] = useState("");
 
+  const [generatedPattern, setGeneratedPattern] = useState<Omit<Note, "id" | "position" | "hit">[]>([]);
+
   const runCode = () => {
     try {
-      // Simulate Python execution with JavaScript
-      const mockPythonExecution = (code: string) => {
+      // Execute Python-style code and generate actual pattern
+      const executeCode = (code: string) => {
         let output = "";
+        let pattern: Omit<Note, "id" | "position" | "hit">[] = [];
         
-        // Simple pattern matching for the demo
-        if (code.includes("generate_pattern")) {
-          output += "Generated rhythm pattern:\n";
-          output += "  0ms: don\n";
-          output += "  500ms: ka\n";
-          output += "  1000ms: don\n";
-          output += "  1500ms: ka\n";
-          output += "  2000ms: don\n";
-          output += "  2500ms: ka\n";
-          output += "  3000ms: don\n";
-          output += "  3500ms: ka\n";
-        } else {
-          output = "Code executed successfully!";
+        // Extract parameters from code
+        const bpmMatch = code.match(/bpm[=\s]*(\d+)/);
+        const typeMatch = code.match(/pattern_type[=\s]*["']([^"']+)["']/);
+        
+        const bpm = bpmMatch ? parseInt(bpmMatch[1]) : 120;
+        const patternType = typeMatch ? typeMatch[1] : "basic";
+        const beatDuration = 60000 / bpm;
+        
+        output += `Executing with BPM: ${bpm}, Pattern: ${patternType}\n\n`;
+        
+        // Generate pattern based on type
+        if (patternType === "basic") {
+          for (let i = 0; i < 8; i++) {
+            const timing = i * beatDuration;
+            const type = i % 2 === 0 ? "don" : "ka";
+            pattern.push({ timing, type: type as any });
+            output += `${timing.toFixed(0)}ms: ${type}\n`;
+          }
+        } else if (patternType === "complex") {
+          const beats = [
+            [0, "don"], [0.5, "don"], [1, "ka"], 
+            [2, "big-don"], [2.5, "ka"], [3, "don"],
+            [3.5, "ka"], [4, "big-ka"], [5, "don"],
+            [5.5, "don"], [6, "ka"], [7, "don"]
+          ];
+          for (const [beatPos, noteType] of beats) {
+            const timing = (beatPos as number) * beatDuration;
+            pattern.push({ timing, type: noteType as any });
+            output += `${timing.toFixed(0)}ms: ${noteType}\n`;
+          }
+        } else if (patternType === "rapid") {
+          for (let i = 0; i < 16; i++) {
+            const timing = i * (beatDuration / 2);
+            const type = i % 4 < 2 ? "don" : "ka";
+            pattern.push({ timing, type: type as any });
+            output += `${timing.toFixed(0)}ms: ${type}\n`;
+          }
         }
         
-        return output;
+        return { output, pattern };
       };
 
-      const result = mockPythonExecution(code);
-      setOutput(result);
+      const result = executeCode(code);
+      setOutput(result.output);
+      setGeneratedPattern(result.pattern);
       
       toast({
-        title: "Code Executed",
-        description: "Python-style code ran successfully!",
+        title: "Pattern Generated!",
+        description: `Created ${result.pattern.length} notes. Click "Load to Game" to use it.`,
       });
     } catch (error) {
       setOutput(`Error: ${error}`);
@@ -72,6 +121,16 @@ for beat in rhythm:
     }
   };
 
+  const loadPatternToGame = () => {
+    if (generatedPattern.length > 0 && onPatternGenerate) {
+      onPatternGenerate(generatedPattern);
+      toast({
+        title: "Pattern Loaded!",
+        description: "Your Python-generated pattern is now ready to play!",
+      });
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -79,10 +138,18 @@ for beat in rhythm:
           <Code className="w-5 h-5" />
           Python-Style Rhythm Editor
         </h3>
-        <Button onClick={runCode} className="flex items-center gap-2">
-          <Play className="w-4 h-4" />
-          Run Code
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={runCode} className="flex items-center gap-2">
+            <Play className="w-4 h-4" />
+            Run Code
+          </Button>
+          {generatedPattern.length > 0 && (
+            <Button onClick={loadPatternToGame} variant="default" className="flex items-center gap-2">
+              <Download className="w-4 h-4" />
+              Load to Game
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

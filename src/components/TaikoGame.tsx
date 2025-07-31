@@ -235,7 +235,7 @@ export const TaikoGame = () => {
         {/* Python Editor */}
         {showPython && (
           <Card className="p-6">
-            <PythonEditor />
+            <PythonEditor onPatternGenerate={handlePatternSave} />
           </Card>
         )}
       </div>
